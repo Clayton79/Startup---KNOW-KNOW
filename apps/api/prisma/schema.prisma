@@ -93,6 +93,7 @@ enum NotificationType {
   SESSION_ACCEPTED
   SESSION_REJECTED
   SESSION_CANCELLED
+  SESSION_EXPIRED
   SESSION_TIME_PROPOSED
   SESSION_REMINDER
   SESSION_COMPLETED
@@ -132,6 +133,8 @@ model Profile {
   status                      ProfileStatus @default(ACTIVE)
   onboardingStep              Int           @default(0) @map("onboarding_step") @db.SmallInt
   onboardingCompletedAt       DateTime?     @map("onboarding_completed_at") @db.Timestamptz(6)
+  /// Registro do aceite dos Termos e da Política (LGPD).
+  termsAcceptedAt             DateTime?     @map("terms_accepted_at") @db.Timestamptz(6)
   /// Reputação como mentor (avaliações recebidas de alunos). Média = sum / count.
   mentorRatingSum             Int           @default(0) @map("mentor_rating_sum")
   mentorRatingCount           Int           @default(0) @map("mentor_rating_count")

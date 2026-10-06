@@ -10,3 +10,7 @@ allowBuilds:
   esbuild: true
   prisma: true
   unrs-resolver: false
+
+# Mantém o Vite numa versão fora da janela de "idade mínima de release" (supply-chain).
+overrides:
+  vite: ~8.3.2

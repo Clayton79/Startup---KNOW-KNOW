@@ -34,9 +34,21 @@ export const envSchema = z
 
     THROTTLE_TTL_SECONDS: z.coerce.number().int().min(1).default(60),
     THROTTLE_LIMIT: z.coerce.number().int().min(1).default(120),
+    /** Só para testes automatizados. Proibido em produção. */
+    THROTTLE_DISABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {
+      if (env.THROTTLE_DISABLED) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['THROTTLE_DISABLED'],
+          message: 'O rate limit não pode ser desligado em produção.',
+        });
+      }
       if (env.CORS_ALLOWED_ORIGINS.includes('*')) {
         ctx.addIssue({
           code: 'custom',

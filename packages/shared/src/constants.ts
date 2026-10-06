@@ -27,3 +27,13 @@ export const AVATAR_RULES = {
   maxBytes: 2 * 1024 * 1024,
   mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
 } as const;
+
+/** Regras de agendamento (aplicadas no backend; o frontend só as usa para orientar). */
+export const SESSION_RULES = {
+  /** Antecedência mínima para solicitar uma aula. */
+  minLeadMinutes: 30,
+  /** Até quantos dias à frente dá para marcar. */
+  maxHorizonDays: 60,
+  /** Solicitações aguardando resposta por aluno ao mesmo tempo (evita spam). */
+  maxPendingPerStudent: 10,
+} as const;

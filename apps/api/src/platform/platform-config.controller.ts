@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SESSION_DURATIONS_MINUTES, type PublicConfig } from '@know-know/shared';
+import { Public } from '../auth/decorators/public.decorator';
 import { AppConfig } from '../config/app-config.service';
 
+@Public()
 @ApiTags('config')
 @Controller('config')
 export class PlatformConfigController {
