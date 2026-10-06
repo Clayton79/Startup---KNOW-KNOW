@@ -53,20 +53,40 @@ Pré-requisitos: **Node 20.19+** (recomendado 22), **pnpm 12** (`corepack enable
 
 ```bash
 pnpm install
-
-# API
-cp apps/api/.env.example apps/api/.env      # preencha DATABASE_URL, SUPABASE_*…
+cp apps/api/.env.example apps/api/.env      # preencha DATABASE_URL e SUPABASE_* (veja abaixo)
+cp apps/web/.env.example apps/web/.env.local
 pnpm db:migrate                             # cria as tabelas
 pnpm db:seed                                # catálogo + perfis fictícios de demonstração
-pnpm dev:api                                # http://localhost:3000  (Swagger em /docs)
-
-# Site (em outro terminal)
-cp apps/web/.env.example apps/web/.env.local
-pnpm dev:web                                # http://localhost:5173
 ```
 
-O **login** usa o Supabase Auth, então você precisa de um projeto Supabase (gratuito) com as chaves em
-`apps/api/.env` e `apps/web/.env.local`. Para os perfis de demonstração conseguirem logar:
+O **login** usa o Supabase Auth. Há duas formas de rodar:
+
+### A) Sem Supabase (o jeito mais rápido de testar)
+
+`pnpm dev:auth` sobe um **login local de desenvolvimento** (`scripts/dev-auth-server.mjs`), um substituto
+mínimo do Supabase Auth que só serve para isso: escuta apenas em `127.0.0.1` e recusa rodar em produção.
+
+Em `apps/api/.env`: `SUPABASE_URL=http://localhost:54321`, `SUPABASE_ANON_KEY=local-anon-key`,
+`SUPABASE_SERVICE_ROLE_KEY=local-service-role-key` e um `SUPABASE_JWT_SECRET` com 32+ caracteres.
+Em `apps/web/.env.local`: `VITE_SUPABASE_URL=http://localhost:54321` e `VITE_SUPABASE_ANON_KEY=local-anon-key`.
+
+```bash
+pnpm dev:auth    # login local        http://localhost:54321
+pnpm dev:api     # API                http://localhost:3000   (Swagger em /docs)
+pnpm dev:web     # site               http://localhost:5173
+```
+
+(um terminal para cada; a API leva ~1 min na primeira partida). Entre com os perfis de demonstração, todos
+com a senha `demo-senha-123`: `ana@demo.know-know.app`, `lucas@…`, `marina@…`, `rafael@…`, e
+`admin@demo.know-know.app` (painel de administração). Cadastros novos também funcionam.
+
+Limites do modo local: não há Storage (o **envio de foto de perfil não funciona**) e não há e-mail: o link de
+"esqueci minha senha" aparece no terminal do `pnpm dev:auth` (e em `.local/dev-auth-recovery-link.txt`).
+
+### B) Com um projeto Supabase real
+
+Crie um projeto gratuito, coloque as chaves em `apps/api/.env` e `apps/web/.env.local` (não rode `dev:auth`) e,
+para os perfis de demonstração conseguirem logar:
 
 ```bash
 SEED_DEMO_PASSWORD='uma-senha-forte' pnpm db:seed -- --reset

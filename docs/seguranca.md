@@ -37,6 +37,9 @@ Mais:
 - **Rate limit em memória**: por instância.
 - Sem **2FA**, sem verificação de identidade e sem moderação automática de texto.
 - Nenhum **teste de penetração** foi feito.
+- O **login local** (`pnpm dev:auth`) é uma ferramenta de desenvolvimento: aceita uma senha fixa para os perfis
+  de demonstração. Ele escuta só em `127.0.0.1`, recusa `NODE_ENV=production` e `SUPABASE_URL` que não seja local,
+  mas **nunca deve ser publicado** nem exposto em rede.
 - Os textos de **Termos** e **Privacidade** são modelos acadêmicos e precisam de revisão jurídica antes de uso comercial.
 
 ## Checklist antes de publicar

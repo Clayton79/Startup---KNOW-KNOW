@@ -79,21 +79,21 @@ export function ExplorePage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-0 sm:px-0">
+    <div className="mx-auto max-w-6xl space-y-6">
       <PageMeta
         title="Explorar conhecimentos"
         description="Encontre pessoas que ensinam inglês, Java, violão e muito mais. Troque conhecimento por créditos."
         noindex={status === 'authenticated'}
       />
 
-      <header className="space-y-2 px-4 pt-6 sm:px-0 sm:pt-0">
+      <header className="space-y-2">
         <h1 className="text-2xl font-extrabold text-brand sm:text-3xl">Explorar conhecimentos</h1>
         <p className="text-fg-muted">
           Procure o que você quer aprender e veja quem pode te ensinar.
         </p>
       </header>
 
-      <div className="space-y-4 px-4 sm:px-0">
+      <div className="space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <label htmlFor="busca" className="sr-only">
@@ -106,7 +106,7 @@ export function ExplorePage() {
             <Input
               id="busca"
               type="search"
-              placeholder="Quero aprender… (ex.: inglês, Java, violão)"
+              placeholder="Inglês, Java, violão…"
               value={text}
               onChange={(event) => setText(event.target.value)}
               className="pl-10"
@@ -217,11 +217,7 @@ export function ExplorePage() {
         ) : null}
       </div>
 
-      <section
-        aria-live="polite"
-        aria-busy={isPending || isPlaceholderData}
-        className="space-y-4 px-4 sm:px-0"
-      >
+      <section aria-live="polite" aria-busy={isPending || isPlaceholderData} className="space-y-4">
         {isPending ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, index) => (

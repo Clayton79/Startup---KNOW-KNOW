@@ -12,6 +12,7 @@
     "build": "pnpm build:shared && pnpm --filter @know-know/api build && pnpm --filter @know-know/web build",
     "dev:api": "pnpm build:shared && pnpm --filter @know-know/api dev",
     "dev:web": "pnpm build:shared && pnpm --filter @know-know/web dev",
+    "dev:auth": "node scripts/dev-auth-server.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -78,7 +78,7 @@ export class DashboardService {
           reviews: { none: { authorId: userId } },
         },
       }),
-      this.explore.recommendations(userId, 4),
+      this.explore.recommendations(userId, 3),
     ]);
 
     const reputation = toReputation(

@@ -36,8 +36,9 @@ export function MentorCard({ card }: { card: ExploreCard }) {
             <Sparkles aria-hidden="true" className="size-3.5" />
             {badge.label}
           </Badge>
-          {card.match.headline ? (
-            <p className="text-sm font-semibold">{card.match.headline}</p>
+          {/* Sempre explica o porquê: a frase do match ou, na falta dela, o principal motivo. */}
+          {(card.match.headline ?? card.match.reasons[0]) ? (
+            <p className="text-sm font-semibold">{card.match.headline ?? card.match.reasons[0]}</p>
           ) : null}
         </div>
       ) : null}

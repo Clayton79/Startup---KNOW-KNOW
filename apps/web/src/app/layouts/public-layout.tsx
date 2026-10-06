@@ -10,7 +10,11 @@ export const publicNavItems = [
   { to: '/explorar', label: 'Explorar' },
 ] as const;
 
-export function PublicLayout() {
+/**
+ * `padded`: páginas "de app" que também são públicas (ex.: Explorar) precisam de margem lateral;
+ * as páginas de marketing (landing) controlam o próprio espaçamento por seção.
+ */
+export function PublicLayout({ padded = false }: { padded?: boolean }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -54,7 +58,7 @@ export function PublicLayout() {
         </div>
       </header>
 
-      <main id="conteudo" className="flex-1">
+      <main id="conteudo" className={cn('flex-1', padded && 'px-4 py-8 sm:px-6')}>
         <Outlet />
       </main>
 
