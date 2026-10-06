@@ -59,6 +59,42 @@ describe('Notificações, denúncias, painel, administração e conta', () => {
       ).toBe(0);
     });
 
+    it('avisa que a aula está chegando, uma única vez por pessoa', async () => {
+      const soon = await s.requested(lucas, ana, 'ingles', { daysAhead: 3, hour: 10 });
+      await s.accept(ana, soon);
+      await prisma.session.update({
+        where: { id: soon },
+        data: {
+          startsAt: new Date(Date.now() + 2 * 3600_000),
+          endsAt: new Date(Date.now() + 3 * 3600_000),
+        },
+      });
+
+      const first = await s
+        .http()
+        .get('/api/v1/notifications/unread-count')
+        .set(lucas.auth)
+        .expect(200);
+      const second = await s
+        .http()
+        .get('/api/v1/notifications/unread-count')
+        .set(lucas.auth)
+        .expect(200);
+      expect(second.body.count).toBe(first.body.count);
+
+      const list = await s.http().get('/api/v1/notifications').set(lucas.auth).expect(200);
+      const reminders = list.body.items.filter(
+        (n: { type: string }) => n.type === 'SESSION_REMINDER',
+      );
+      expect(reminders).toHaveLength(1);
+      expect(reminders[0].body).toBe('A aula de Inglês com Ana está chegando.');
+
+      const mentorList = await s.http().get('/api/v1/notifications').set(ana.auth).expect(200);
+      expect(
+        mentorList.body.items.filter((n: { type: string }) => n.type === 'SESSION_REMINDER'),
+      ).toHaveLength(1);
+    });
+
     it('ninguém marca como lida a notificação de outra pessoa', async () => {
       await s.requested(lucas, ana, 'ingles');
       const list = await s.http().get('/api/v1/notifications').set(ana.auth).expect(200);

@@ -45,6 +45,33 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * Cria o lembrete "sua aula é em breve" (aulas confirmadas nas próximas 24 h). Roda sob demanda
+   * quando a pessoa consulta suas notificações, pois não há job agendado no plano gratuito.
+   * Idempotente: no máximo um lembrete por aula e por pessoa.
+   */
+  async ensureReminders(userId: string): Promise<void> {
+    const now = new Date();
+    const soon = new Date(now.getTime() + 24 * 3_600_000);
+    const sessions = await this.prisma.session.findMany({
+      where: {
+        status: 'ACCEPTED',
+        startsAt: { gt: now, lte: soon },
+        OR: [{ mentorId: userId }, { studentId: userId }],
+        notifications: { none: { userId, type: 'SESSION_REMINDER' } },
+      },
+      select: { id: true, mentorId: true, studentId: true },
+    });
+    for (const session of sessions) {
+      await this.create(this.prisma, {
+        userId,
+        type: 'SESSION_REMINDER',
+        sessionId: session.id,
+        actorId: session.mentorId === userId ? session.studentId : session.mentorId,
+      });
+    }
+  }
+
   async list(
     userId: string,
     { page, pageSize }: PaginationQuery,

@@ -1,0 +1,21 @@
+# Postgres local para desenvolvimento (opcional: use se você não tiver um Postgres instalado).
+#   docker compose up -d
+# Depois: DATABASE_URL=postgresql://knowknow@127.0.0.1:54329/knowknow
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - '54329:5432'
+    environment:
+      POSTGRES_USER: knowknow
+      POSTGRES_DB: knowknow
+      # Só para uso local. Aceita conexões sem senha apenas de dentro da sua máquina.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - knowknow-pgdata:/var/lib/postgresql/data
+      # Cria os bancos de teste e e2e na primeira subida.
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  knowknow-pgdata:

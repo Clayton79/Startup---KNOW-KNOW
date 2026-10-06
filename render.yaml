@@ -1,0 +1,51 @@
+# Blueprint do Render para a API da KNOW-KNOW.
+# Em render.com: New → Blueprint → aponte para este repositório.
+# Os valores marcados com `sync: false` são pedidos no painel (nunca vão para o Git).
+services:
+  - type: web
+    name: know-know-api
+    runtime: node
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile --prod=false &&
+      pnpm build:shared &&
+      pnpm --filter @know-know/api build &&
+      pnpm --filter @know-know/api prisma:deploy
+    startCommand: node apps/api/dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      # Frontend (Cloudflare Pages) e origens liberadas no CORS
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      # Supabase Postgres: pooler para a aplicação, conexão direta para as migrations
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      # Supabase (Settings → API). A service role key é SEGREDO.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_AVATAR_BUCKET
+        value: avatars
+      # Regras de negócio
+      - key: CREDITS_PER_HOUR
+        value: 10
+      - key: WELCOME_BONUS_CREDITS
+        value: 20
+      - key: THROTTLE_TTL_SECONDS
+        value: 60
+      - key: THROTTLE_LIMIT
+        value: 120

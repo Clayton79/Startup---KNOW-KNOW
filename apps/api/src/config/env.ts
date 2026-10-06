@@ -21,6 +21,8 @@ export const envSchema = z
 
     DATABASE_URL: z.string().min(1),
     DIRECT_URL: z.string().min(1).optional(),
+    /** Conexões simultâneas com o banco. Em planos gratuitos, 5–8 evita estourar o limite do Supabase. */
+    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
 
     SUPABASE_URL: z.url(),
     SUPABASE_ANON_KEY: z.string().min(1),

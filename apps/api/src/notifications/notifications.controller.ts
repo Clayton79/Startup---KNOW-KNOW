@@ -23,16 +23,18 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Minhas notificações (mais recentes primeiro)' })
-  list(
+  async list(
     @RequiredUser() user: AuthenticatedUser,
     @Query() query: PaginationDto,
   ): Promise<Paginated<NotificationView>> {
+    await this.notifications.ensureReminders(user.id);
     return this.notifications.list(user.id, query);
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Quantas notificações ainda não li' })
   async unreadCount(@RequiredUser() user: AuthenticatedUser): Promise<UnreadCount> {
+    await this.notifications.ensureReminders(user.id);
     return { count: await this.notifications.unreadCount(user.id) };
   }
 

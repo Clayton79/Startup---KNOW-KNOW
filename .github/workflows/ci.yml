@@ -75,3 +75,61 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: knowknow
+          POSTGRES_PASSWORD: knowknow
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U knowknow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # O teste cria o banco `knowknow_e2e`, aplica as migrations e carrega o seed.
+      E2E_DATABASE_URL: postgresql://knowknow:knowknow@localhost:5432/knowknow_e2e
+      CI: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build (a API de e2e roda o código compilado)
+        run: pnpm build
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: ci-anon-key
+          DATABASE_URL: postgresql://knowknow:knowknow@localhost:5432/knowknow_e2e
+
+      - name: Navegador do Playwright
+        run: pnpm --filter @know-know/web exec playwright install --with-deps chromium
+
+      - name: Testes ponta a ponta
+        run: pnpm --filter @know-know/web e2e
+
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
