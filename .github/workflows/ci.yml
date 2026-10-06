@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: knowknow
+          POSTGRES_PASSWORD: knowknow
+          POSTGRES_DB: knowknow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U knowknow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Valores abaixo são apenas para o banco/serviços efêmeros do CI. Nenhum segredo real.
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://knowknow:knowknow@localhost:5432/knowknow_test
+      DIRECT_URL: postgresql://knowknow:knowknow@localhost:5432/knowknow_test
+      FRONTEND_URL: http://localhost:5173
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: ci-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+      SUPABASE_JWT_SECRET: ci-jwt-secret-with-at-least-32-characters-long
+      VITE_SUPABASE_URL: http://localhost:54321
+      VITE_SUPABASE_ANON_KEY: ci-anon-key
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Contraste do design system (WCAG AA)
+        run: pnpm check:contrast
+
+      - name: Prisma Client
+        run: pnpm db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Testes
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

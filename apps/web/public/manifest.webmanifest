@@ -1,0 +1,14 @@
+{
+  "name": "KNOW-KNOW",
+  "short_name": "KNOW-KNOW",
+  "description": "Troca de conhecimento que transforma.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#122F69",
+  "theme_color": "#122F69",
+  "icons": [
+    { "src": "/brand/mark-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/mark-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

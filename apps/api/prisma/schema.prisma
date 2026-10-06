@@ -1,0 +1,403 @@
+// KNOW-KNOW: schema do banco (PostgreSQL / Supabase).
+//
+// Regras que o Prisma não expressa (CHECKs, constraints de exclusão, trigger de imutabilidade do
+// ledger e RLS) ficam em SQL dentro das migrations. Veja prisma/migrations/*_database_rules.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums (espelham packages/shared/src/enums.ts) ─────────────────────
+
+enum ProfileRole {
+  USER
+  ADMIN
+}
+
+enum ProfileStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum PreferredMode {
+  ONLINE
+  IN_PERSON
+  BOTH
+}
+
+enum SkillLevel {
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum SessionMode {
+  ONLINE
+  IN_PERSON
+}
+
+enum MeetingProvider {
+  GOOGLE_MEET
+  DISCORD
+  OTHER
+  IN_PERSON
+}
+
+enum SessionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  IN_PROGRESS
+  AWAITING_CONFIRMATION
+  COMPLETED
+  NO_SHOW
+  DISPUTED
+}
+
+enum Confirmation {
+  YES
+  NO
+}
+
+enum CreditTransactionType {
+  EARNED_CLASS
+  SPENT_CLASS
+  BONUS
+  REFUND
+  ADMIN_ADJUSTMENT
+}
+
+enum ReviewDirection {
+  STUDENT_TO_MENTOR
+  MENTOR_TO_STUDENT
+}
+
+enum ReviewCategory {
+  DIDACTICS
+  KNOWLEDGE
+  PUNCTUALITY
+  PARTICIPATION
+  RESPECT
+}
+
+enum NotificationType {
+  SESSION_REQUESTED
+  SESSION_ACCEPTED
+  SESSION_REJECTED
+  SESSION_CANCELLED
+  SESSION_TIME_PROPOSED
+  SESSION_REMINDER
+  SESSION_COMPLETED
+  SESSION_DISPUTED
+  REVIEW_RECEIVED
+  CREDITS_RECEIVED
+}
+
+enum ReportReason {
+  INAPPROPRIATE_BEHAVIOR
+  NO_SHOW
+  SPAM
+  FAKE_PROFILE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+// ───────────────────────────── Perfis ─────────────────────────────
+
+/// O id é o mesmo `auth.users.id` do Supabase Auth. E-mail e senha ficam só no Supabase.
+model Profile {
+  id                          String        @id @db.Uuid
+  displayName                 String        @map("display_name") @db.VarChar(60)
+  avatarPath                  String?       @map("avatar_path") @db.VarChar(255)
+  bio                         String?       @db.VarChar(500)
+  city                        String?       @db.VarChar(80)
+  state                       String?       @db.Char(2)
+  preferredMode               PreferredMode @default(BOTH) @map("preferred_mode")
+  timezone                    String        @default("America/Sao_Paulo") @db.VarChar(64)
+  role                        ProfileRole   @default(USER)
+  status                      ProfileStatus @default(ACTIVE)
+  onboardingStep              Int           @default(0) @map("onboarding_step") @db.SmallInt
+  onboardingCompletedAt       DateTime?     @map("onboarding_completed_at") @db.Timestamptz(6)
+  /// Reputação como mentor (avaliações recebidas de alunos). Média = sum / count.
+  mentorRatingSum             Int           @default(0) @map("mentor_rating_sum")
+  mentorRatingCount           Int           @default(0) @map("mentor_rating_count")
+  /// Reputação como aluno (avaliações recebidas de mentores).
+  studentRatingSum            Int           @default(0) @map("student_rating_sum")
+  studentRatingCount          Int           @default(0) @map("student_rating_count")
+  sessionsTaught              Int           @default(0) @map("sessions_taught")
+  sessionsLearned             Int           @default(0) @map("sessions_learned")
+  createdAt                   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt                   DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  wallet         Wallet?
+  teachingSkills UserTeachingSkill[]
+  learningSkills UserLearningSkill[]
+  availability   AvailabilityRule[]
+  mentorSessions Session[]           @relation("SessionMentor")
+  studentSessions Session[]          @relation("SessionStudent")
+  transactions   CreditTransaction[]
+  reviewsWritten Review[]            @relation("ReviewAuthor")
+  reviewsReceived Review[]           @relation("ReviewTarget")
+  notifications  Notification[]      @relation("NotificationOwner")
+  reportsFiled   Report[]            @relation("ReportReporter")
+  reportsAgainst Report[]            @relation("ReportTarget")
+
+  @@index([status])
+  @@map("profiles")
+}
+
+// ───────────────────────────── Habilidades ─────────────────────────────
+
+model SkillCategory {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String  @db.VarChar(60)
+  slug      String  @unique @db.VarChar(60)
+  sortOrder Int     @default(0) @map("sort_order")
+  skills    Skill[]
+
+  @@map("skill_categories")
+}
+
+model Skill {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  name       String   @db.VarChar(60)
+  slug       String   @unique @db.VarChar(60)
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  category       SkillCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  teachers       UserTeachingSkill[]
+  learners       UserLearningSkill[]
+  sessions       Session[]
+
+  @@index([categoryId])
+  @@map("skills")
+}
+
+model UserTeachingSkill {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  skillId     String     @map("skill_id") @db.Uuid
+  level       SkillLevel
+  description String?    @db.VarChar(300)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill   @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, skillId])
+  @@index([skillId, level])
+  @@map("user_teaching_skills")
+}
+
+model UserLearningSkill {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String      @map("user_id") @db.Uuid
+  skillId      String      @map("skill_id") @db.Uuid
+  desiredLevel SkillLevel? @map("desired_level")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill   @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, skillId])
+  @@index([skillId])
+  @@map("user_learning_skills")
+}
+
+// ───────────────────────────── Disponibilidade ─────────────────────────────
+
+/// Janela recorrente semanal na timezone do perfil. weekday: 0 = domingo … 6 = sábado.
+/// Horários em minutos desde 00:00 (ex.: 19h = 1140).
+model AvailabilityRule {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  weekday     Int      @db.SmallInt
+  startMinute Int      @map("start_minute") @db.SmallInt
+  endMinute   Int      @map("end_minute") @db.SmallInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday, startMinute])
+  @@index([userId])
+  @@map("availability_rules")
+}
+
+// ───────────────────────────── Aulas ─────────────────────────────
+
+model Session {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mentorId         String          @map("mentor_id") @db.Uuid
+  studentId        String          @map("student_id") @db.Uuid
+  skillId          String          @map("skill_id") @db.Uuid
+  status           SessionStatus   @default(PENDING)
+  mode             SessionMode
+  meetingProvider  MeetingProvider @map("meeting_provider")
+  /// Link da reunião. Privado: só os dois participantes veem, e só depois do aceite.
+  meetingUrl       String?         @map("meeting_url") @db.VarChar(500)
+  locationNote     String?         @map("location_note") @db.VarChar(200)
+  /// Mensagem do aluno para o mentor ao solicitar.
+  note             String?         @db.VarChar(500)
+  startsAt         DateTime        @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime        @map("ends_at") @db.Timestamptz(6)
+  durationMinutes  Int             @map("duration_minutes") @db.SmallInt
+  /// Custo congelado no momento da solicitação (a taxa pode mudar depois).
+  creditCost       Int             @map("credit_cost")
+  /// Quem fez a última proposta de horário; a resposta cabe ao outro lado.
+  lastProposedById String          @map("last_proposed_by_id") @db.Uuid
+  cancelledById    String?         @map("cancelled_by_id") @db.Uuid
+  studentConfirmation Confirmation? @map("student_confirmation")
+  studentConfirmedAt  DateTime?    @map("student_confirmed_at") @db.Timestamptz(6)
+  mentorConfirmation  Confirmation? @map("mentor_confirmation")
+  mentorConfirmedAt   DateTime?    @map("mentor_confirmed_at") @db.Timestamptz(6)
+  /// Preenchido quando os créditos foram liquidados. Garante liquidação única.
+  settledAt        DateTime?       @map("settled_at") @db.Timestamptz(6)
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  mentor       Profile             @relation("SessionMentor", fields: [mentorId], references: [id], onDelete: Restrict)
+  student      Profile             @relation("SessionStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  skill        Skill               @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  transactions CreditTransaction[]
+  reviews      Review[]
+  notifications Notification[]
+  reports      Report[]
+
+  @@index([mentorId, startsAt])
+  @@index([studentId, startsAt])
+  @@index([status, endsAt])
+  @@index([skillId])
+  @@map("sessions")
+}
+
+// ───────────────────────────── Créditos ─────────────────────────────
+
+/// Saldo materializado, sempre atualizado na mesma transação que grava o ledger.
+/// balance = créditos totais; held = parte reservada por solicitações em andamento.
+/// Disponível = balance - held. CHECK (balance >= 0, held >= 0, held <= balance) no banco.
+model Wallet {
+  userId    String   @id @map("user_id") @db.Uuid
+  balance   Int      @default(0)
+  held      Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+/// Ledger imutável (trigger bloqueia UPDATE/DELETE). amount > 0 entrada, amount < 0 saída.
+model CreditTransaction {
+  id           String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String                @map("user_id") @db.Uuid
+  type         CreditTransactionType
+  amount       Int
+  balanceAfter Int                   @map("balance_after")
+  sessionId    String?               @map("session_id") @db.Uuid
+  description  String                @db.VarChar(200)
+  /// Admin que fez o ajuste manual, quando houver.
+  createdById  String?               @map("created_by_id") @db.Uuid
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    Profile  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  /// Idempotência: no máximo uma transação de cada tipo por usuário em cada aula.
+  @@unique([sessionId, userId, type])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("credit_transactions")
+}
+
+// ───────────────────────────── Avaliações ─────────────────────────────
+
+model Review {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId String          @map("session_id") @db.Uuid
+  authorId  String          @map("author_id") @db.Uuid
+  targetId  String          @map("target_id") @db.Uuid
+  direction ReviewDirection
+  /// Nota geral (1–5): média arredondada das categorias.
+  rating    Int             @db.SmallInt
+  comment   String?         @db.VarChar(300)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  session Session       @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  author  Profile       @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  target  Profile       @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Restrict)
+  scores  ReviewScore[]
+
+  @@unique([sessionId, authorId])
+  @@index([targetId, createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+model ReviewScore {
+  reviewId String         @map("review_id") @db.Uuid
+  category ReviewCategory
+  score    Int            @db.SmallInt
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, category])
+  @@map("review_scores")
+}
+
+// ───────────────────────────── Notificações e denúncias ─────────────────────────────
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  sessionId String?          @map("session_id") @db.Uuid
+  actorId   String?          @map("actor_id") @db.Uuid
+  /// Valor numérico associado (ex.: créditos recebidos).
+  amount    Int?
+  readAt    DateTime?        @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    Profile  @relation("NotificationOwner", fields: [userId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model Report {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId   String       @map("reporter_id") @db.Uuid
+  targetUserId String       @map("target_user_id") @db.Uuid
+  sessionId    String?      @map("session_id") @db.Uuid
+  reason       ReportReason
+  details      String?      @db.VarChar(1000)
+  status       ReportStatus @default(OPEN)
+  resolvedById String?      @map("resolved_by_id") @db.Uuid
+  resolvedAt   DateTime?    @map("resolved_at") @db.Timestamptz(6)
+  resolutionNote String?    @map("resolution_note") @db.VarChar(500)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reporter Profile  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  target   Profile  @relation("ReportTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
+  session  Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([targetUserId])
+  @@map("reports")
+}

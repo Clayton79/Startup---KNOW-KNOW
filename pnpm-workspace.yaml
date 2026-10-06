@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Scripts de build de dependências: só o que é necessário.
+allowBuilds:
+  '@parcel/watcher': false
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  esbuild: true
+  prisma: true
+  unrs-resolver: false

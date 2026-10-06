@@ -1,0 +1,66 @@
+/*
+ * Design tokens da KNOW-KNOW.
+ *
+ * Origem: cores amostradas da logo oficial.
+ *   --kk-brand      #122F69  azul-marinho do fundo da logo
+ *   --kk-secondary  #F4EEDE  creme das letras/ícone da logo
+ * O azul de ação (primary) mantém o mesmo matiz (~220°), porém mais claro e saturado,
+ * para botões e links serem amigáveis e acessíveis. Pares validados por `pnpm check:contrast`.
+ *
+ * Nenhum componente usa hexadecimal direto: sempre os tokens abaixo (via classes Tailwind).
+ */
+:root {
+  /* Marca */
+  --kk-brand: #122f69;
+  --kk-brand-soft: #1b3f86;
+
+  /* Ação */
+  --kk-primary: #2b5bd7;
+  --kk-primary-hover: #1f47b0;
+  --kk-primary-strong: #1c3f9a;
+  --kk-primary-soft: #eaf0fd;
+  --kk-primary-foreground: #ffffff;
+
+  /* Secundária (creme da logo) */
+  --kk-secondary: #f4eede;
+  --kk-secondary-hover: #ebe3cc;
+  --kk-secondary-foreground: #122f69;
+
+  /* Superfícies e texto */
+  --kk-background: #fbfaf7;
+  --kk-surface: #ffffff;
+  --kk-surface-muted: #f4f2ec;
+  --kk-text: #0f1b3d;
+  --kk-text-muted: #52607f;
+  --kk-border: #e3e0d6;
+  --kk-border-strong: #8a8f9c;
+  --kk-focus-ring: #2b5bd7;
+
+  /* Estados */
+  --kk-success: #17744a;
+  --kk-success-soft: #e6f4ec;
+  --kk-warning: #8a5a0f;
+  --kk-warning-soft: #fdf3dc;
+  --kk-error: #b42a2e;
+  --kk-error-soft: #fce9e9;
+
+  /* Créditos (moeda da plataforma) */
+  --kk-credit: #e8a93a;
+  --kk-credit-foreground: #2e2000;
+
+  /* Forma e elevação */
+  --kk-radius-sm: 0.5rem;
+  --kk-radius-md: 0.75rem;
+  --kk-radius-lg: 1rem;
+  --kk-radius-xl: 1.5rem;
+  --kk-shadow-sm: 0 1px 2px rgb(18 47 105 / 0.06), 0 1px 3px rgb(18 47 105 / 0.05);
+  --kk-shadow-md: 0 4px 12px rgb(18 47 105 / 0.08), 0 2px 4px rgb(18 47 105 / 0.05);
+  --kk-shadow-lg: 0 12px 32px rgb(18 47 105 / 0.12), 0 4px 8px rgb(18 47 105 / 0.06);
+
+  color-scheme: light;
+}
+
+/*
+ * Dark mode: estrutura pronta, não priorizada no MVP.
+ * Para ativar, defina aqui os mesmos tokens semânticos e marque <html data-theme="dark">.
+ */

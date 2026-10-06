@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /perfil
+Disallow: /aulas
+Disallow: /agenda
+Disallow: /carteira
+Disallow: /avaliacoes
+Disallow: /configuracoes
+Disallow: /notificacoes
+Disallow: /admin

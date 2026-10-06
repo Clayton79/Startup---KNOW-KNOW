@@ -1,0 +1,29 @@
+# dependências e builds
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# ambientes (nunca versionar segredos)
+.env
+.env.*
+!.env.example
+
+# banco local de desenvolvimento
+.local/
+
+# prisma client gerado
+apps/api/src/generated/
+
+# testes e ferramentas
+playwright-report/
+test-results/
+.vite/
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.log
