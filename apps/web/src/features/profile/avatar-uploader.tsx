@@ -68,6 +68,8 @@ export function AvatarUploader({ name, currentUrl }: { name: string; currentUrl:
           type="file"
           accept={AVATAR_RULES.mimeTypes.join(',')}
           className="sr-only"
+          aria-label="Escolher foto de perfil"
+          tabIndex={-1}
           onChange={(event) => void onSelect(event)}
         />
         <Button

@@ -27,3 +27,7 @@ test-results/
 Thumbs.db
 .idea/
 *.log
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/

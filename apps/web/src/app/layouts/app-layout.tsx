@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/brand/logo';
 import { Avatar } from '@/components/ui/avatar';
@@ -34,12 +34,10 @@ function SidebarLink({ item }: { item: NavItem }) {
 export function AppLayout() {
   const { data: me } = useMe();
   const { signOut } = useAuth();
-  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      void navigate('/', { replace: true });
+      await signOut(); // o guard de rota leva para o início
     } catch {
       toast.error('Não conseguimos sair agora. Tente de novo.');
     }

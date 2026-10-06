@@ -22,6 +22,8 @@ interface SignUpInput {
 
 interface AuthContextValue {
   status: AuthStatus;
+  /** A pessoa clicou em "Sair" (e não foi uma sessão que expirou). */
+  signedOutByUser: boolean;
   user: User | null;
   signIn: (email: string, password: string) => Promise<void>;
   /** Retorna `true` quando a conta já está logada, `false` se precisa confirmar o e-mail. */
@@ -42,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
+  const [signedOutByUser, setSignedOutByUser] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -56,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
       setStatus(nextSession ? 'authenticated' : 'anonymous');
+      if (event === 'SIGNED_IN') setSignedOutByUser(false);
       if (event === 'SIGNED_OUT') queryClient.clear();
     });
 
@@ -84,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    setSignedOutByUser(true);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);
@@ -103,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
+      signedOutByUser,
       user: session?.user ?? null,
       signIn,
       signUp,
@@ -110,7 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       updatePassword,
     }),
-    [status, session, signIn, signUp, signOut, requestPasswordReset, updatePassword],
+    [
+      status,
+      signedOutByUser,
+      session,
+      signIn,
+      signUp,
+      signOut,
+      requestPasswordReset,
+      updatePassword,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

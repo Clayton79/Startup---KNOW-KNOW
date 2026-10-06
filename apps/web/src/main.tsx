@@ -2,6 +2,7 @@ import '@fontsource-variable/plus-jakarta-sans';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/styles/index.css';
+import '@/lib/zod-locale';
 import { App } from '@/app/app';
 import { ConfigErrorScreen } from '@/app/config-error-screen';
 import { envProblems } from '@/lib/env';

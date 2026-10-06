@@ -4,7 +4,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useMe } from '@/features/profile/use-profile';
 import { useAuth } from './auth-provider';
 
-function FullPageSpinner({ label }: { label: string }) {
+export function FullPageSpinner({ label }: { label: string }) {
   return (
     <div className="flex min-h-dvh items-center justify-center">
       <Spinner className="size-8" label={label} />
@@ -14,21 +14,35 @@ function FullPageSpinner({ label }: { label: string }) {
 
 /** Só entra quem está logado; os demais vão para o login e voltam depois. */
 export function RequireAuth() {
-  const { status } = useAuth();
+  const { status, signedOutByUser } = useAuth();
   const location = useLocation();
 
   if (status === 'loading') return <FullPageSpinner label="Carregando" />;
   if (status === 'anonymous') {
+    // Quem clicou em "Sair" volta para o início; sessão expirada vai para o login e retorna depois.
+    if (signedOutByUser) return <Navigate to="/" replace />;
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   }
   return <Outlet />;
 }
 
-/** Telas de entrada (login, cadastro): quem já está logado vai direto para o painel. */
+/**
+ * Telas de entrada (login, cadastro): quem já está logado segue para onde queria ir
+ * (a rota que o fez cair no login) ou, na falta dela, para o painel.
+ */
 export function GuestOnly() {
   const { status } = useAuth();
+  const location = useLocation();
   if (status === 'loading') return <FullPageSpinner label="Carregando" />;
-  if (status === 'authenticated') return <Navigate to="/dashboard" replace />;
+  if (status === 'authenticated') {
+    const from = (location.state as { from?: string } | null)?.from;
+    return (
+      <Navigate
+        to={from && from.startsWith('/') && !from.startsWith('//') ? from : '/dashboard'}
+        replace
+      />
+    );
+  }
   return <Outlet />;
 }
 

@@ -41,3 +41,16 @@ describe('format', () => {
     expect(formatLocation(null, null)).toBeNull();
   });
 });
+
+describe('availabilityChips', () => {
+  it('ordena de segunda a domingo e formata as faixas', async () => {
+    const { availabilityChips } = await import('./format');
+    expect(
+      availabilityChips([
+        { weekday: 0, startMinute: 540, endMinute: 720 },
+        { weekday: 3, startMinute: 1080, endMinute: 1260 },
+        { weekday: 1, startMinute: 1140, endMinute: 1320 },
+      ]),
+    ).toEqual(['Seg 19h–22h', 'Qua 18h–21h', 'Dom 9h–12h']);
+  });
+});

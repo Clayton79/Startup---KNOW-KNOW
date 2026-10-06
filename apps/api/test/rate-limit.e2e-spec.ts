@@ -11,7 +11,7 @@ describe('Rate limit', () => {
     process.env.THROTTLE_LIMIT = '5';
     process.env.THROTTLE_TTL_SECONDS = '60';
     // Import dinâmico: o ConfigModule lê o ambiente quando o AppModule é carregado.
-    const { createTestApp } = await import('./helpers/app');
+    const { createTestApp } = await import('./helpers/app.js');
     ({ app } = await createTestApp());
   });
 

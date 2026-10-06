@@ -52,3 +52,21 @@ export function formatLocation(city: string | null, state: string | null): strin
 export function browserTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
 }
+
+const WEEKDAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+/** ["Seg 19h–22h", "Qua 18h–21h"…] ordenado de segunda a domingo. */
+export function availabilityChips(
+  rules: { weekday: number; startMinute: number; endMinute: number }[],
+): string[] {
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  return [...rules]
+    .sort(
+      (a, b) =>
+        order.indexOf(a.weekday) - order.indexOf(b.weekday) || a.startMinute - b.startMinute,
+    )
+    .map(
+      (rule) =>
+        `${WEEKDAY_SHORT[rule.weekday]} ${formatMinutes(rule.startMinute)}–${formatMinutes(rule.endMinute)}`,
+    );
+}
