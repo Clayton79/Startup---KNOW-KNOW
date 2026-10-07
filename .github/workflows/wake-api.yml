@@ -1,0 +1,47 @@
+name: Acordar a API (Render)
+
+# O plano gratuito do Render dorme após ~15 min sem uso e a primeira chamada leva cerca de 1 minuto.
+# Rode este workflow (Actions → "Acordar a API" → Run workflow) alguns minutos antes de apresentar.
+#
+# Mantê-la acordada o tempo todo com um agendamento NÃO é recomendado no plano gratuito: as horas
+# gratuitas do Render são compartilhadas entre todos os seus serviços (~750 h/mês) e a API
+# ficaria sempre ligada. Se quiser isso, o caminho certo é o plano pago do Render.
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: 'Quanto tempo manter acordada (minutos, 1 a 30)'
+        default: '10'
+
+permissions: {}
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Acordar e manter por alguns minutos
+        env:
+          API: https://know-know-api.onrender.com
+          MINUTOS: ${{ inputs.minutos }}
+        run: |
+          set -u
+          case "$MINUTOS" in ''|*[!0-9]*) MINUTOS=10 ;; esac
+          minutos=$(( MINUTOS > 30 ? 30 : MINUTOS < 1 ? 1 : MINUTOS ))
+          echo "Acordando $API (a primeira resposta pode levar ~1 min)…"
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$API/health" || true)
+            echo "tentativa $i: HTTP $code"
+            [ "$code" = "200" ] && break
+            sleep 10
+          done
+          [ "$code" = "200" ] || { echo "A API não respondeu."; exit 1; }
+          curl -s --max-time 30 "$API/health/ready"; echo
+          echo "No ar. Mantendo acordada por $minutos min…"
+          end=$(( $(date +%s) + minutos * 60 ))
+          while [ "$(date +%s)" -lt "$end" ]; do
+            sleep 240
+            curl -s -o /dev/null --max-time 30 "$API/health" || true
+          done
+          echo "Concluído."

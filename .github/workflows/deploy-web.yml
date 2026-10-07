@@ -1,0 +1,56 @@
+name: Deploy do site (Cloudflare Pages)
+
+# Publica o site a cada push na main que mexa no frontend ou no pacote compartilhado.
+# A API (Render) já faz deploy automático sozinha pelo GitHub.
+#
+# Precisa de 2 SEGREDOS no GitHub (Settings → Secrets and variables → Actions → Secrets):
+#   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit" (crie um NOVO e restrito)
+#   CLOUDFLARE_ACCOUNT_ID  id da conta Cloudflare
+# As variáveis VITE_* abaixo são públicas (vão para o navegador de qualquer forma).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build do site (inclui checagem de tipos)
+        run: pnpm build:shared && pnpm --filter @know-know/web build
+        env:
+          VITE_API_URL: https://know-know-api.onrender.com
+          VITE_SUPABASE_URL: https://yxfxevsprquywqokhmyx.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_tqMOMSw2akwGCfG_FRV0iA_RsC_Cvyh
+          VITE_SITE_URL: https://know-know.pages.dev
+
+      - name: Publicar no Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/web/dist --project-name=know-know --branch=main
