@@ -107,15 +107,16 @@ Todas documentadas em [`apps/api/.env.example`](apps/api/.env.example) e [`apps/
 
 ## Comandos
 
-| Comando                            | O que faz                                                                          |
-| ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `pnpm lint` / `pnpm format`        | ESLint / Prettier                                                                  |
-| `pnpm typecheck`                   | TypeScript estrito em todos os pacotes                                             |
-| `pnpm test`                        | testes unitários e de integração (API contra Postgres real, web com Vitest)        |
-| `pnpm e2e`                         | build + Playwright: fluxo completo da banca, responsividade e acessibilidade (axe) |
-| `pnpm build`                       | build de produção de tudo                                                          |
-| `pnpm check:contrast`              | valida os pares de cor do design system (WCAG AA)                                  |
-| `pnpm db:migrate` · `pnpm db:seed` | migrations / dados de demonstração                                                 |
+| Comando                                        | O que faz                                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `pnpm lint` / `pnpm format`                    | ESLint / Prettier                                                                  |
+| `pnpm typecheck`                               | TypeScript estrito em todos os pacotes                                             |
+| `pnpm test`                                    | testes unitários e de integração (API contra Postgres real, web com Vitest)        |
+| `pnpm e2e`                                     | build + Playwright: fluxo completo da banca, responsividade e acessibilidade (axe) |
+| `pnpm build`                                   | build de produção de tudo                                                          |
+| `pnpm check:contrast`                          | valida os pares de cor do design system (WCAG AA)                                  |
+| `pnpm db:migrate` · `pnpm db:seed`             | migrations / dados de demonstração                                                 |
+| `tsx prisma/seed-community.ts` (em `apps/api`) | "comunidade" fictícia de 10 pessoas para deixar o site vivo (veja abaixo)          |
 
 Antes de publicar, o pipeline é: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` (o CI faz o mesmo e roda o e2e).
 

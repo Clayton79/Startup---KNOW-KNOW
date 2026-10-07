@@ -7,6 +7,7 @@ import {
   type Paginated,
   type SkillLevel,
 } from '@know-know/shared';
+import { slugify } from '../common/slug';
 import { AppConfig } from '../config/app-config.service';
 import { PrismaService } from '../database/prisma.service';
 import type { Prisma } from '../generated/prisma/client';
@@ -125,6 +126,8 @@ export class ExploreService {
     };
 
     const text = query.q?.trim();
+    // "violao" deve achar "Violão": o slug da habilidade já é minúsculo e sem acento.
+    const textSlug = text ? slugify(text) : '';
     return {
       skill: { isActive: true },
       user: userFilter,
@@ -135,6 +138,7 @@ export class ExploreService {
         ? {
             OR: [
               { skill: { name: { contains: text, mode: 'insensitive' as const } } },
+              ...(textSlug ? [{ skill: { slug: { contains: textSlug } } }] : []),
               { user: { displayName: { contains: text, mode: 'insensitive' as const } } },
             ],
           }

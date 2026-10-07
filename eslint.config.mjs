@@ -59,7 +59,11 @@ export default defineConfig(
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },
   {
-    files: ['apps/api/prisma/seed.ts', 'apps/api/prisma.config.ts'],
+    files: [
+      'apps/api/prisma/seed.ts',
+      'apps/api/prisma/seed-community.ts',
+      'apps/api/prisma.config.ts',
+    ],
     rules: { 'no-console': 'off' },
   },
 

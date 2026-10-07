@@ -129,6 +129,19 @@ describe('Explorar e match', () => {
       ]);
     });
 
+    it('a busca ignora acentos: "violao" acha Violão e "ingles" acha Inglês', async () => {
+      await s.user('Thiago', { teach: [['violao']] });
+      await s.user('Ana', { teach: [['ingles']] });
+      const guitar = await explore('?q=violao').expect(200);
+      expect(guitar.body.items.map((c: { displayName: string }) => c.displayName)).toEqual([
+        'Thiago',
+      ]);
+      const english = await explore('?q=INGLES').expect(200);
+      expect(english.body.items.map((c: { displayName: string }) => c.displayName)).toEqual([
+        'Ana',
+      ]);
+    });
+
     it('pagina e limita o tamanho da página', async () => {
       for (let i = 1; i <= 5; i++) await s.user(`Mentor ${i}`, { teach: [['ingles']] });
       const page = await explore('?pageSize=2&page=3').expect(200);

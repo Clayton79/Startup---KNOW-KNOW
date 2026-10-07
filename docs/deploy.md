@@ -112,3 +112,20 @@ recriar tudo (**apaga todos os dados**).
 - [ ] Trocar a foto de perfil funciona (bucket `avatars`).
 - [ ] CORS: abrir o site de outra origem **não** consegue chamar a API.
 - [ ] A `service_role` não aparece em nenhum arquivo do site (`apps/web/dist`).
+
+## Comunidade de demonstração (opcional)
+
+Para o site não parecer vazio, `apps/api/prisma/seed-community.ts` cria **10 pessoas fictícias** com
+conhecimentos, horários, aulas em todos os estados, créditos (pelo ledger de verdade), avaliações,
+notificações e denúncias. Todas têm "(perfil de demonstração)" na bio e **não têm conta de login**.
+
+```bash
+cd apps/api
+# DIRECT_URL do banco no ambiente (o script não lê arquivos .env, de propósito)
+npx tsx prisma/seed-community.ts --confirm-production   # cria (não duplica se rodar de novo)
+npx tsx prisma/seed-community.ts --confirm-production --remove   # apaga só essas pessoas
+```
+
+A remoção **recusa** apagar se alguém real tiver interagido com elas (aula ou denúncia), para não mexer
+nos créditos e no histórico dessas pessoas. Pedidos feitos por usuários reais a essas pessoas ficam sem
+resposta e expiram quando o horário passa (os créditos reservados voltam).
