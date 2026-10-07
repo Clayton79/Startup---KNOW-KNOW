@@ -219,6 +219,8 @@ async function main(): Promise<void> {
 
     await seedCatalog(prisma);
     console.log(`Catálogo: ${CATALOG.length} categorias.`);
+    // Produção: só o catálogo (categorias e habilidades), sem os perfis fictícios.
+    if (process.argv.includes('--catalog-only')) return;
 
     const skillBySlug = new Map(
       (await prisma.skill.findMany()).map((skill) => [skill.slug, skill]),
