@@ -31,3 +31,6 @@ Thumbs.db
 # Playwright
 apps/web/test-results/
 apps/web/playwright-report/
+
+# Supabase CLI (só usamos para operações pontuais)
+supabase/
