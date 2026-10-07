@@ -6,12 +6,12 @@ services:
     name: know-know-api
     runtime: node
     plan: free
-    region: oregon
+    region: virginia
     healthCheckPath: /health
     autoDeploy: true
     buildCommand: >-
       corepack enable &&
-      pnpm install --frozen-lockfile --prod=false &&
+      NODE_ENV=development pnpm install --frozen-lockfile &&
       pnpm build:shared &&
       pnpm --filter @know-know/api build &&
       pnpm --filter @know-know/api prisma:deploy

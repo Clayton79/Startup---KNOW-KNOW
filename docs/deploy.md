@@ -34,12 +34,12 @@ build, start e health check. Preencha as variáveis marcadas `sync: false`.
 
 Opção B, manual: _New → Web Service_, runtime Node, e:
 
-| Campo                   | Valor                                                                                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build Command           | `corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm build:shared && pnpm --filter @know-know/api build && pnpm --filter @know-know/api prisma:deploy` |
-| Start Command           | `node apps/api/dist/main.js`                                                                                                                                              |
-| Health Check Path       | `/health`                                                                                                                                                                 |
-| Variável `NODE_VERSION` | `22`                                                                                                                                                                      |
+| Campo                   | Valor                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build Command           | `corepack enable && NODE_ENV=development pnpm install --frozen-lockfile && pnpm build:shared && pnpm --filter @know-know/api build && pnpm --filter @know-know/api prisma:deploy` |
+| Start Command           | `node apps/api/dist/main.js`                                                                                                                                                      |
+| Health Check Path       | `/health`                                                                                                                                                                         |
+| Variável `NODE_VERSION` | `22`                                                                                                                                                                              |
 
 Variáveis de ambiente (todas em `apps/api/.env.example`):
 
